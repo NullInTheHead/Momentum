@@ -8,7 +8,7 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT;
 
-app.use(cors({origin:['https://momentum-pearl.vercel.app/','http://localhost:5173/']}));
+app.use(cors({origin:['https://momentum-pearl.vercel.app','http://localhost:5173']}));
 app.use(express.json());
 
 app.use('/auth', authRouter);
