@@ -43,7 +43,7 @@ export const login = async(req, res) => {
     if (!isPasswordValid) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
-    const token = jsonwebtoken.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "1h" });
+    const token = jsonwebtoken.sign({ userId: user.user_id }, JWT_SECRET, { expiresIn: "1h" });
     return res.status(200).json({ token });
   
 }
