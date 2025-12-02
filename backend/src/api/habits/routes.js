@@ -1,0 +1,11 @@
+const express = require("express");
+const { create, getAll, getById, update, archive, remove } = require("./controllers");
+const { validateCreateHabit } = require("./middlewares");
+const router = express.Router();
+router.post("/", validateCreateHabit, create);
+router.get("/", getAll);
+router.get("/:id", getById);
+router.put("/:id", update);
+router.patch("/:id/archive", archive);
+router.delete("/:id", remove);
+module.exports = router;
