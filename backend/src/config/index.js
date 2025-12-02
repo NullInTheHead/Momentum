@@ -24,9 +24,9 @@ const config = {
     },
     cors: {
         origins: [
-            "http://localhost:5173/",
-            "https://momentum-pearl.vercel.app/",
-            'https://momentum-5jip.onrender.com/'
+            "http://localhost:5173",
+            "https://momentum-pearl.vercel.app",
+            'https://momentum-5jip.onrender.com'
         ],
         credentials: true,
     },
