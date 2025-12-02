@@ -22,7 +22,7 @@ const config = {
     cors: {
         origins: [
             "http://localhost:5173/",
-            "http:"
+            "https://momentum-pearl.vercel.app/"
         ],
         credentials: true,
     },
