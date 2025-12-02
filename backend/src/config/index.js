@@ -25,13 +25,14 @@ const config = {
     cors: {
         origins: [
             "http://localhost:5173/",
-            "https://momentum-pearl.vercel.app/"
+            "https://momentum-pearl.vercel.app/",
+            'https://momentum-5jip.onrender.com/'
         ],
         credentials: true,
     },
     rateLimit: {
         windowMs: 15 * 60 * 1000, 
-        max: process.env.NODE_ENV === "production" ? 100 : 1000, 
+        max: process.env.NODE_ENV === "production" ? 1000 : 1000, 
     },
     rateLimitAuth: {
         windowMs: 15 * 60 * 1000,
