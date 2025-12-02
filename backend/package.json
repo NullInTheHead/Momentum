@@ -7,7 +7,9 @@
   "main": "src/server.js",
   "scripts": {
     "test": "jest --runInBand",
-    "start": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "build": "prisma generate",
     "seed": "node src/scripts/seed.js",
     "seed:demo": "node src/scripts/seed-demo-complete.js",
     "verify:demo": "node src/scripts/verify-demo-account.js"
