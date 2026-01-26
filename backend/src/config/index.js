@@ -23,20 +23,19 @@ const config = {
         expiresIn: "1h",
     },
     cors: {
-        origins: [
+        origins: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(",") : [
             "http://localhost:5173",
             "https://momentum-pearl.vercel.app",
-            'https://momentum-5jip.onrender.com'
         ],
         credentials: true,
     },
     rateLimit: {
-        windowMs: 15 * 60 * 1000, 
-        max: process.env.NODE_ENV === "production" ? 1000 : 1000, 
+        windowMs: 15 * 60 * 1000,
+        max: process.env.NODE_ENV === "production" ? 1000 : 1000,
     },
     rateLimitAuth: {
         windowMs: 15 * 60 * 1000,
-        max: 5, 
+        max: 5,
     },
     logging: {
         level: process.env.LOG_LEVEL || "info",

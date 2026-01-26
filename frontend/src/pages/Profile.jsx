@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, User, Mail, AtSign, Image, Save, Loader } from "lucide-react";
 import ProfilePictureUpload from "../components/ProfilePictureUpload";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? "https://momentum-5jip.onrender.com";
+import { getProfile, updateProfile } from "../utils/api";
+import { useToast } from "../context/ToastContext";
 
 export default function Profile() {
   const [profile, setProfile] = useState(null);
@@ -15,8 +16,6 @@ export default function Profile() {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
-  const [isError, setIsError] = useState(false);
   const [emailChanged, setEmailChanged] = useState(false);
   const navigate = useNavigate();
 
@@ -26,23 +25,14 @@ export default function Profile() {
 
   const loadProfile = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${API_BASE_URL}/api/user/profile`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const data = await getProfile();
+      setProfile(data);
+      setFormData({
+        name: data.name || "",
+        username: data.username || "",
+        email: data.email || "",
+        profile_picture_url: data.profile_picture_url || "",
       });
-      const data = await response.json();
-      
-      if (response.ok) {
-        setProfile(data);
-        setFormData({
-          name: data.name || "",
-          username: data.username || "",
-          email: data.email || "",
-          profile_picture_url: data.profile_picture_url || "",
-        });
-      }
     } catch (error) {
       console.error("Error loading profile:", error);
     } finally {
@@ -54,7 +44,7 @@ export default function Profile() {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setMessage("");
-    
+
     // Track if email has been changed
     if (name === "email" && profile && value !== profile.email) {
       setEmailChanged(true);
@@ -72,7 +62,7 @@ export default function Profile() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (formData.email && !emailRegex.test(formData.email)) {
@@ -80,7 +70,7 @@ export default function Profile() {
       setIsError(true);
       return;
     }
-    
+
     // Show confirmation if email is being changed
     if (emailChanged) {
       const confirmed = window.confirm(
@@ -90,41 +80,25 @@ export default function Profile() {
         return;
       }
     }
-    
+
     setSaving(true);
     setMessage("");
     setIsError(false);
 
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${API_BASE_URL}/api/user/profile`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
+      const data = await updateProfile(formData);
+      setProfile(data.user);
+      setFormData({
+        name: data.user.name || "",
+        username: data.user.username || "",
+        email: data.user.email || "",
+        profile_picture_url: data.user.profile_picture_url || "",
       });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setProfile(data.user);
-        setFormData({
-          name: data.user.name || "",
-          username: data.user.username || "",
-          email: data.user.email || "",
-          profile_picture_url: data.user.profile_picture_url || "",
-        });
-        setEmailChanged(false);
-        setMessage("Profile updated successfully!");
-        setIsError(false);
-      } else {
-        setMessage(data.message || "Failed to update profile");
-        setIsError(true);
-      }
+      setEmailChanged(false);
+      setMessage("Profile updated successfully!");
+      setIsError(false);
     } catch (error) {
-      setMessage("Error updating profile");
+      setMessage(error.message || "Error updating profile");
       setIsError(true);
     } finally {
       setSaving(false);
@@ -163,11 +137,10 @@ export default function Profile() {
 
           {message && (
             <div
-              className={`mb-6 p-4 rounded-xl ${
-                isError
-                  ? "bg-red-500/20 border border-red-500/30 text-red-400"
-                  : "bg-green-500/20 border border-green-500/30 text-green-400"
-              }`}
+              className={`mb-6 p-4 rounded-xl ${isError
+                ? "bg-red-500/20 border border-red-500/30 text-red-400"
+                : "bg-green-500/20 border border-green-500/30 text-green-400"
+                }`}
             >
               {message}
             </div>
@@ -266,10 +239,10 @@ export default function Profile() {
                 <span className="text-white">
                   {profile?.created_at
                     ? new Date(profile.created_at).toLocaleDateString("en-US", {
-                        month: "long",
-                        day: "numeric",
-                        year: "numeric",
-                      })
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    })
                     : "N/A"}
                 </span>
               </p>

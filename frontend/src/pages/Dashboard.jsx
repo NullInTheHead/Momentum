@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { getHabits, createLog, getUserSummary, getPendingRequests } from "../utils/api";
+import { useToast } from "../context/ToastContext";
+import { getHabits, createLog, getUserSummary, getPendingRequests, deleteAccount, getProfile } from "../utils/api";
 import { Plus, Clock, Target, TrendingUp, LogOut, Calendar, Flame, BarChart3, Sparkles, Users, Settings } from "lucide-react";
 import AccountabilityPod from "../components/AccountabilityPod";
 
@@ -21,10 +22,10 @@ export default function Dashboard() {
     loadData();
     const interval = setInterval(updateTimeLeft, 1000);
     updateTimeLeft();
-    
+
     // Poll for pending requests every 30 seconds
     const pollInterval = setInterval(loadPendingRequests, 30000);
-    
+
     return () => {
       clearInterval(interval);
       clearInterval(pollInterval);
@@ -44,22 +45,15 @@ export default function Dashboard() {
 
   const loadData = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const [habitsData, summaryData, profileResponse] = await Promise.all([
+      const [habitsData, summaryData, profileData] = await Promise.all([
         getHabits({ status: "active", sortBy: "created_at", sortOrder: "desc" }),
         getUserSummary(),
-        fetch(`${import.meta.env.VITE_API_URL ?? "https://momentum-5jip.onrender.com"}/api/user/profile`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
+        getProfile(),
       ]);
       setHabits(habitsData.habits || []);
       setSummary(summaryData);
-      
-      if (profileResponse.ok) {
-        const profileData = await profileResponse.json();
-        setProfile(profileData.profile);
-      }
-      
+      setProfile(profileData.profile);
+
       // Load pending requests count
       await loadPendingRequests();
     } catch (error) {
@@ -78,42 +72,35 @@ export default function Dashboard() {
     }
   };
 
+  const { addToast } = useToast();
+
   const handleComplete = async (habitId) => {
     try {
       await createLog(habitId);
       await loadData();
+      addToast("Habit marked as done!", "success");
     } catch (error) {
       console.error("Error completing habit:", error);
-      alert(error.message);
+      addToast(error.message || "Failed to complete habit", "error");
     }
   };
 
   const handleLogout = () => {
     logout();
     navigate("/login");
+    addToast("Logged out successfully", "info");
   };
 
   const handleDeleteAccount = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${import.meta.env.VITE_API_URL ?? "https://momentum-5jip.onrender.com"}/api/user/account`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        // Clear local storage and redirect to login
-        logout();
-        navigate("/login");
-      } else {
-        const data = await response.json();
-        alert(data.message || "Failed to delete account");
-      }
+      await deleteAccount();
+      // Clear local storage and redirect to login
+      logout();
+      navigate("/login");
+      addToast("Account deleted successfully", "info");
     } catch (error) {
       console.error("Error deleting account:", error);
-      alert("Error deleting account");
+      addToast(error.message || "Failed to delete account", "error");
     }
   };
 

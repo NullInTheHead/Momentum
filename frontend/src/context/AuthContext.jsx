@@ -1,27 +1,58 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import api from "../api/axios";
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(localStorage.getItem("token") || null);
   const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const login = (newToken) => {
-    setToken(newToken);
-    localStorage.setItem("token", newToken);
+  const checkAuth = async () => {
+    try {
+      const { data } = await api.get("/auth/me");
+      if (data.success && data.user) {
+        setUser(data.user);
+        setIsAuthenticated(true);
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+      }
+    } catch (error) {
+      setUser(null);
+      setIsAuthenticated(false);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const logout = () => {
-    setToken(null);
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const login = async (email, password) => {
+    const { data } = await api.post("/auth/login", { email, password });
+    if (data.success) {
+      setUser(data.user);
+      setIsAuthenticated(true);
+      return true;
+    }
+    return false;
+  };
+
+  const logout = async () => {
+    try {
+      await api.post("/auth/logout");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
     setUser(null);
-    localStorage.removeItem("token");
+    setIsAuthenticated(false);
   };
-
-  const isAuthenticated = !!token;
 
   return (
-    <AuthContext.Provider value={{ token, login, logout, isAuthenticated, user, setUser }}>
-      {children}
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, checkAuth, loading }}>
+      {!loading && children}
     </AuthContext.Provider>
   );
 };
@@ -33,4 +64,5 @@ export const useAuth = () => {
   }
   return context;
 };
+
 

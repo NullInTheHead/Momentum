@@ -61,11 +61,17 @@ async function getHabits({
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const habitIds = habits.map((h) => h.habit_id);
+  const oneYearAgo = new Date();
+  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
   const [allLogs, todayLogs] = await Promise.all([
     prisma.habitLog.findMany({
       where: {
         habit_id: { in: habitIds },
         user_id: userId,
+        log_date: {
+          gte: oneYearAgo,
+        },
       },
       orderBy: { log_date: "desc" },
     }),

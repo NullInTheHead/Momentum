@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const compression = require("compression");
+const cookieParser = require("cookie-parser");
 const config = require("./config");
 const logger = require("./utils/logger");
 const { connectDatabase, setupGracefulShutdown } = require("./config/database");
@@ -18,6 +19,7 @@ const sharedRouter = require("./api/shared/routes");
 const app = express();
 app.use(helmet());
 app.use(compression());
+app.use(cookieParser());
 app.use(
   cors({
     origin: config.cors.origins,

@@ -39,10 +39,10 @@ async function loginUser({ email, password }) {
     throw new UnauthorizedError(ERROR_MESSAGES.INVALID_CREDENTIALS);
   }
   const token = jwt.sign(
-    { userId: user.user_id, email: user.email },
+    { userId: user.user_id, email: user.email, role: user.role },
     config.jwt.secret,
     { expiresIn: JWT.EXPIRES_IN }
   );
-  return token;
+  return { token, user: { id: user.user_id, email: user.email, name: user.name, username: user.username, role: user.role } };
 }
 module.exports = { createUser, loginUser };

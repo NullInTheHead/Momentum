@@ -1,13 +1,12 @@
 import { useState, useRef } from "react";
 import { Upload, X, Loader, CheckCircle, AlertCircle } from "lucide-react";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? "https://momentum-5jip.onrender.com";
+import { uploadProfilePicture } from "../utils/api";
+import { useToast } from "../context/ToastContext";
 
 export default function ProfilePictureUpload({ currentPictureUrl, onUploadSuccess }) {
   const [preview, setPreview] = useState(null);
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -28,12 +27,9 @@ export default function ProfilePictureUpload({ currentPictureUrl, onUploadSucces
   };
 
   const handleFileSelect = (file) => {
-    setError("");
-    setSuccess(false);
-
     const validationError = validateFile(file);
     if (validationError) {
-      setError(validationError);
+      addToast(validationError, "error");
       return;
     }
 
@@ -81,8 +77,6 @@ export default function ProfilePictureUpload({ currentPictureUrl, onUploadSucces
     setSuccess(false);
 
     try {
-      const token = localStorage.getItem("token");
-      
       // Get the file from the input
       const file = fileInputRef.current?.files?.[0];
       if (!file) {
@@ -94,31 +88,19 @@ export default function ProfilePictureUpload({ currentPictureUrl, onUploadSucces
       const formData = new FormData();
       formData.append("profilePicture", file);
 
-      const response = await fetch(`${API_BASE_URL}/api/user/profile/upload-picture`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
+      const data = await uploadProfilePicture(formData);
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setSuccess(true);
-        setPreview(null);
-        if (onUploadSuccess) {
-          onUploadSuccess(data.profile_picture_url);
-        }
-        // Clear file input
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
-        }
-      } else {
-        setError(data.message || "Failed to upload image");
+      setSuccess(true);
+      setPreview(null);
+      if (onUploadSuccess) {
+        onUploadSuccess(data.profile_picture_url);
+      }
+      // Clear file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
       }
     } catch (err) {
-      setError("Error uploading image. Please try again.");
+      setError(err.message || "Error uploading image. Please try again.");
       console.error("Upload error:", err);
     } finally {
       setUploading(false);
@@ -153,11 +135,10 @@ export default function ProfilePictureUpload({ currentPictureUrl, onUploadSucces
 
       {/* Upload Area */}
       <div
-        className={`relative border-2 border-dashed rounded-xl p-6 transition ${
-          dragActive
-            ? "border-brand-blue bg-brand-blue/10"
-            : "border-white/20 hover:border-white/40"
-        }`}
+        className={`relative border-2 border-dashed rounded-xl p-6 transition ${dragActive
+          ? "border-brand-blue bg-brand-blue/10"
+          : "border-white/20 hover:border-white/40"
+          }`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
@@ -233,21 +214,7 @@ export default function ProfilePictureUpload({ currentPictureUrl, onUploadSucces
         )}
       </div>
 
-      {/* Error Message */}
-      {error && (
-        <div className="flex items-center gap-2 p-4 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400">
-          <AlertCircle className="h-5 w-5 flex-shrink-0" />
-          <p className="text-sm">{error}</p>
-        </div>
-      )}
 
-      {/* Success Message */}
-      {success && (
-        <div className="flex items-center gap-2 p-4 rounded-xl bg-green-500/20 border border-green-500/30 text-green-400">
-          <CheckCircle className="h-5 w-5 flex-shrink-0" />
-          <p className="text-sm">Profile picture uploaded successfully!</p>
-        </div>
-      )}
     </div>
   );
 }

@@ -111,4 +111,10 @@ model users {
   friendships_as_friend Friendship[]   @relation("FriendshipFriend")
   shared_habits_as_owner SharedHabit[] @relation("SharedHabitOwner")
   shared_habits_as_partner SharedHabit[] @relation("SharedHabitPartner")
+  role                Role     @default(USER)
+}
+
+enum Role {
+  USER
+  ADMIN
 }
